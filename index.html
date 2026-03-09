@@ -448,7 +448,7 @@
             detailSummary = `<details class="calendarMeta"><summary>記録を見る</summary><div>チェック：${count} / ${checkboxes.length}</div><div>合計：${total}h</div><div>制作 ${detail.logs?.create || 0}h / 転職 ${detail.logs?.career || 0}h / 編集 ${detail.logs?.edit || 0}h / 配信 ${detail.logs?.stream || 0}h</div><div>メモ：${escapeHtml(detail.memo || 'なし')}</div></details>`;
           } catch (e) {}
         }
-        cells += `<div class="calendarCell ${isMuted ? 'isMuted' : ''} ${isToday ? 'isToday' : ''}"><div class="calendarDate">${cellDate.getDate()}</div><textarea class="calendarText" data-date="${key}" placeholder="予定を書く"></textarea>${detailSummary}</div>`;
+        cells += `<div class="calendarCell ${isMuted ? 'isMuted' : ''} ${isToday ? 'isToday' : ''}"><div class="calendarDate">${cellDate.getDate()}</div><textarea class="calendarText" data-date="${key}" placeholder="　"></textarea>${detailSummary}</div>`;
       }
       monthlyCalendar.innerHTML = `<div class="calendarWrap"><div class="calendarGrid">${heads}${cells}</div></div>`;
       monthlyCalendar.querySelectorAll('.calendarText').forEach(textarea => {
