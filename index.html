@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>休職ダッシュボード</title>
+  <style>
+    :root{
+      --bg1:#fffaf6;
+      --bg2:#fff2e8;
+      --card:#ffffffcc;
+      --line:#efd8c7;
+      --text:#4a3f39;
+      --muted:#7a6c64;
+      --accent:#f2b27a;
+      --accent-strong:#e49a59;
+      --shadow:0 10px 30px rgba(140, 94, 46, .12);
+      --radius:22px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:system-ui, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic UI", sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at 10% 0%, rgba(255,220,190,.6), transparent 60%),
+        radial-gradient(800px 500px at 100% 0%, rgba(255,235,220,.75), transparent 55%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      min-height:100vh;
+      padding:28px;
+    }
+    .wrap{ max-width:1200px; margin:0 auto; display:grid; gap:18px; }
+    .hero,.card{
+      background:var(--card);
+      backdrop-filter:blur(8px);
+      border:1px solid rgba(255,255,255,.7);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+    .hero{ padding:26px; display:grid; grid-template-columns:1.3fr .9fr; gap:18px; align-items:center; }
+    h1,h2,h3,p{ margin:0; }
+    .eyebrow{ color:var(--accent-strong); font-weight:700; font-size:13px; margin-bottom:8px; letter-spacing:.04em; }
+    .title{ font-size:clamp(28px, 4vw, 42px); line-height:1.15; margin-bottom:10px; }
+    .desc{ color:var(--muted); line-height:1.7; }
+    .statusBox{ background:rgba(255,255,255,.72); border:1px solid var(--line); border-radius:18px; padding:18px; display:grid; gap:14px; }
+    .statusRow{ display:flex; justify-content:space-between; gap:12px; align-items:center; flex-wrap:wrap; }
+    .todayBadge{ display:inline-flex; align-items:center; gap:8px; background:#fff4ea; color:#9a5e2f; border:1px solid #f1c89f; padding:8px 12px; border-radius:999px; font-size:14px; font-weight:700; }
+    .grid{ display:grid; grid-template-columns:1.05fr 1fr; gap:18px; }
+    .card{ padding:22px; }
+    .cardHeader{ display:flex; justify-content:space-between; align-items:flex-end; gap:10px; margin-bottom:14px; }
+    .cardTitle{ font-size:22px; }
+    .small{ color:var(--muted); font-size:13px; }
+    .weekList,.dayList,.checkList{ display:grid; gap:10px; }
+    .weekItem,.dayItem,.checkItem{ border:1px solid var(--line); border-radius:16px; padding:14px 16px; background:rgba(255,255,255,.72); }
+    .weekItem{ display:grid; grid-template-columns:72px 1fr; gap:12px; align-items:start; }
+    .weekDay{ font-weight:800; color:var(--accent-strong); font-size:18px; }
+    .weekMain{ font-weight:700; margin-bottom:4px; }
+    .weekSub,.dayNote{ color:var(--muted); font-size:14px; line-height:1.6; }
+    .today{ border:2px solid var(--accent); background:#fff8f1; }
+    .time{ font-weight:800; color:#8c5e2e; margin-bottom:6px; }
+    .task{ font-weight:700; margin-bottom:4px; }
+    .progressGrid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-bottom:14px; }
+    .pillCard{ border:1px solid var(--line); border-radius:18px; padding:14px; background:rgba(255,255,255,.72); }
+    .pillLabel{ color:var(--muted); font-size:13px; margin-bottom:8px; }
+    .pillNum{ font-size:28px; font-weight:800; }
+    .barWrap{ display:grid; gap:10px; margin-top:10px; }
+    .barRow{ display:grid; grid-template-columns:72px 1fr 42px; gap:10px; align-items:center; font-size:14px; }
+    .bar{ height:12px; background:#f7e7d8; border-radius:999px; overflow:hidden; }
+    .fill{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--accent), var(--accent-strong)); }
+    .memo{ min-height:120px; width:100%; resize:vertical; border:1px solid var(--line); border-radius:16px; padding:14px; font:inherit; color:var(--text); background:rgba(255,255,255,.82); }
+    .checkItem{ display:flex; align-items:flex-start; gap:10px; }
+    .checkItem input{ width:18px; height:18px; margin-top:2px; accent-color:var(--accent-strong); flex:0 0 auto; }
+    .calendarWrap{ overflow-x:auto; padding-bottom:6px; }
+    .calendarGrid{ display:grid; grid-template-columns:repeat(7, minmax(150px, 1fr)); gap:10px; min-width:1120px; }
+    .calendarHead{ text-align:center; font-size:13px; color:var(--muted); font-weight:700; padding-bottom:4px; }
+    .calendarCell{ border:1px solid var(--line); border-radius:16px; background:rgba(255,255,255,.72); min-height:180px; padding:10px; display:flex; flex-direction:column; gap:8px; }
+    .calendarCell.isMuted{ opacity:.45; }
+    .calendarCell.isToday{ border:2px solid var(--accent); background:#fff8f1; }
+    .calendarDate{ font-weight:800; color:var(--accent-strong); font-size:14px; }
+    .calendarText{ width:100%; min-height:78px; resize:vertical; border:1px solid rgba(239,216,199,.9); border-radius:12px; padding:8px; font:inherit; color:var(--text); background:rgba(255,255,255,.86); }
+    .calendarMeta{ font-size:12px; color:var(--muted); line-height:1.5; }
+    .calendarMeta summary{ cursor:pointer; color:var(--accent-strong); font-weight:700; }
+    .footerNote{ text-align:center; color:var(--muted); font-size:13px; padding:4px 0 12px; }
+    @media (max-width: 900px){ .hero,.grid{ grid-template-columns:1fr; } .progressGrid{ grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">休職中のゆるい作戦会議</div>
+        <h1 class="title">休職ダッシュボード</h1>
+        <p class="desc">今の軸は、<strong>デッキ構築システム制作</strong>を中心に、<strong>火・木20時の配信</strong>、<strong>動画編集</strong>、そして<strong>週1回の転職活動</strong>を無理なく回すこと。完璧にこなすより、1週間を気持ちよく進めるための見える化用ページです。</p>
+      </div>
+      <div class="statusBox">
+        <div class="statusRow">
+          <span class="todayBadge" id="todayBadge">📅 今日：読み込み中...</span>
+          <span class="small">生活リズムは昼〜深夜ベースでOK</span>
+        </div>
+        <div>
+          <h3 style="margin-bottom:8px;">今日のひとこと</h3>
+          <p class="desc" id="todayFocus">読み込み中...</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="cardHeader"><div><h2 class="cardTitle">週間予定</h2><p class="small">固定予定を先に置いた、現実的な1週間</p></div></div>
+        <div class="weekList" id="weekList"></div>
+      </article>
+      <article class="card">
+        <div class="cardHeader"><div><h2 class="cardTitle">1日の流れ</h2><p class="small">昼スタート前提のゆるいテンプレ</p></div></div>
+        <div class="dayList" id="dayList"></div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="cardHeader"><div><h2 class="cardTitle">今週の配分イメージ</h2><p class="small">体感でわかるようにざっくり可視化</p></div></div>
+        <div class="progressGrid">
+          <div class="pillCard"><div class="pillLabel">制作</div><div class="pillNum">4日</div></div>
+          <div class="pillCard"><div class="pillLabel">配信</div><div class="pillNum">2日</div></div>
+          <div class="pillCard"><div class="pillLabel">転職活動</div><div class="pillNum">1日</div></div>
+        </div>
+        <div class="barWrap">
+          <div class="barRow"><div>制作</div><div class="bar"><div class="fill" style="width:80%;"></div></div><div>4</div></div>
+          <div class="barRow"><div>配信</div><div class="bar"><div class="fill" style="width:40%;"></div></div><div>2</div></div>
+          <div class="barRow"><div>動画編集</div><div class="bar"><div class="fill" style="width:20%;"></div></div><div>1</div></div>
+          <div class="barRow"><div>転職</div><div class="bar"><div class="fill" style="width:20%;"></div></div><div>1</div></div>
+        </div>
+      </article>
+      <article class="card">
+        <div class="cardHeader"><div><h2 class="cardTitle">今日のチェック</h2><p class="small">できたらチェック。全部できなくてもOK。</p></div></div>
+        <div class="checkList" id="todayCheckList">
+          <label class="checkItem"><input type="checkbox"><span>メイン作業を1つ進めた</span></label>
+          <label class="checkItem"><input type="checkbox"><span>外の空気を吸った / 少し動いた</span></label>
+          <label class="checkItem"><input type="checkbox"><span>ごはんと水分をちゃんととった</span></label>
+          <label class="checkItem"><input type="checkbox"><span>明日の最初の1手を決めた</span></label>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="cardHeader"><div><h2 class="cardTitle">今週の最重要タスク</h2><p class="small">迷ったらここに戻る</p></div></div>
+        <div class="checkList">
+          <div class="checkItem"><span>🎯</span><span>デッキ構築システムを1か月でテスト込み完成に近づける</span></div>
+          <div class="checkItem"><span>🎥</span><span>動画編集の時間を金曜に確保する</span></div>
+          <div class="checkItem"><span>📡</span><span>火・木20時の配信を無理なく続ける</span></div>
+          <div class="checkItem"><span>💼</span><span>転職活動は週1回で十分。やりすぎない</span></div>
+        </div>
+      </article>
+      <article class="card">
+        <div class="cardHeader"><div><h2 class="cardTitle">メモ</h2><p class="small">その日の気分や、次にやることを書いておく欄</p></div></div>
+        <textarea id="memoBox" class="memo" placeholder="例：今日は仕様整理だけでもOK。配信前は無理に制作を詰め込まない。"></textarea>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <div class="cardHeader"><div><h2 class="cardTitle">今月の集計</h2><p class="small">今月どれくらい動けているかのざっくり記録</p></div></div>
+        <div class="progressGrid">
+          <div class="pillCard"><div class="pillLabel">合計作業時間</div><div class="pillNum" id="monthTotalHours">0h</div></div>
+          <div class="pillCard"><div class="pillLabel">制作累計</div><div class="pillNum" id="monthCreateHours">0h</div></div>
+          <div class="pillCard"><div class="pillLabel">配信回数</div><div class="pillNum" id="monthStreamCount">0回</div></div>
+        </div>
+        <div class="barWrap">
+          <div class="barRow"><div>制作</div><div class="bar"><div class="fill" id="monthBarCreate" style="width:0%;"></div></div><div id="monthBarCreateNum">0h</div></div>
+          <div class="barRow"><div>転職</div><div class="bar"><div class="fill" id="monthBarCareer" style="width:0%;"></div></div><div id="monthBarCareerNum">0h</div></div>
+          <div class="barRow"><div>編集</div><div class="bar"><div class="fill" id="monthBarEdit" style="width:0%;"></div></div><div id="monthBarEditNum">0h</div></div>
+          <div class="barRow"><div>配信</div><div class="bar"><div class="fill" id="monthBarStream" style="width:0%;"></div></div><div id="monthBarStreamNum">0h</div></div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="cardHeader"><div><h2 class="cardTitle">昨日の記録</h2><p class="small">前日にやれたことを自動で残しておく欄</p></div></div>
+        <div class="checkList" id="yesterdayBox"><div class="checkItem"><span>🗂️</span><span>まだ昨日の記録はありません。</span></div></div>
+      </article>
+      <article class="card">
+        <div class="cardHeader"><div><h2 class="cardTitle">今日の作業ログ</h2><p class="small">どれくらい動けたかをざっくり記録</p></div></div>
+        <div class="barWrap" style="margin-top:0;">
+          <div class="barRow"><div>制作</div><input id="logCreate" type="number" min="0" max="12" step="0.5" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:12px; font:inherit;" placeholder="3"><div>h</div></div>
+          <div class="barRow"><div>転職</div><input id="logCareer" type="number" min="0" max="12" step="0.5" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:12px; font:inherit;" placeholder="1"><div>h</div></div>
+          <div class="barRow"><div>編集</div><input id="logEdit" type="number" min="0" max="12" step="0.5" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:12px; font:inherit;" placeholder="1"><div>h</div></div>
+          <div class="barRow"><div>配信</div><input id="logStream" type="number" min="0" max="12" step="0.5" style="width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:12px; font:inherit;" placeholder="2"><div>h</div></div>
+        </div>
+        <div class="statusBox" style="margin-top:14px; padding:14px;"><div class="statusRow"><strong>今日の合計</strong><span id="todayTotal">0h</span></div><p class="small">細かく正確でなくて大丈夫です。体感で入れる用。</p></div>
+      </article>
+    </section>
+
+    <section class="card">
+      <div class="cardHeader"><div><h2 class="cardTitle">1か月の更新カレンダー</h2><p class="small">横7日表示の月間メモ。記録がある日は詳細も見られます。</p></div></div>
+      <div class="statusRow" style="margin-bottom:14px;">
+        <button id="prevMonthBtn" type="button" style="border:1px solid var(--line); background:rgba(255,255,255,.82); border-radius:12px; padding:8px 12px; font:inherit; cursor:pointer;">← 前の月</button>
+        <strong id="calendarTitle">2026年3月</strong>
+        <button id="nextMonthBtn" type="button" style="border:1px solid var(--line); background:rgba(255,255,255,.82); border-radius:12px; padding:8px 12px; font:inherit; cursor:pointer;">次の月 →</button>
+      </div>
+      <div id="monthlyCalendar"></div>
+    </section>
+
+    <p class="footerNote">デスクトップに置いて、起きたら開くくらいの使い方を想定です。</p>
+  </div>
+
+  <script>
+    const weekPlan = [
+      { day: '月', main: '制作DAY', sub: 'デッキ構築システムを進める。仕様整理、実装、UI調整など。' },
+      { day: '火', main: '軽作業 + 配信 20:00〜', sub: '昼は軽めの作業。夜は1〜2時間配信。配信前に無理をしない。' },
+      { day: '水', main: '転職活動DAY', sub: '求人確認、応募、書類修正などをまとめてやる日。やりすぎ注意。' },
+      { day: '木', main: '制作 + 配信 20:00〜', sub: '制作を少し進めて、夜は配信。進捗が少なくてもOK。' },
+      { day: '金', main: '動画編集DAY', sub: '配信の切り抜き、編集、サムネ、投稿準備など。' },
+      { day: '土', main: '制作 / 研究DAY', sub: 'デッキ構築システムか、ボドゲ研究。気分に合わせて選ぶ。' },
+      { day: '日', main: '休みDAY', sub: '完全休み。罪悪感なしで休む日。' }
+    ];
+    const dayFlow = [
+      { time: '12:00〜13:00', task: '起床・ごはん', note: '起きられたら十分。まず生活を立ち上げる。' },
+      { time: '14:00〜17:00', task: 'メイン制作', note: 'デッキ構築システムのコア時間。いちばん大事。' },
+      { time: '17:00〜18:00', task: '休憩', note: 'ごはん、散歩、だらだらする時間。' },
+      { time: '18:00〜20:00', task: '軽作業', note: '動画編集、転職活動、サイト整理などの軽め枠。' },
+      { time: '20:00〜22:00', task: '配信（火・木）', note: 'ない日は自由時間か軽い作業にしてOK。' },
+      { time: '22:00〜27:00', task: '自由制作 / 思考整理', note: '集中できるなら進める。疲れていたら休む。' }
+    ];
+
+    const weekList = document.getElementById('weekList');
+    const dayList = document.getElementById('dayList');
+    const todayBadge = document.getElementById('todayBadge');
+    const todayFocus = document.getElementById('todayFocus');
+    const memoBox = document.getElementById('memoBox');
+    const yesterdayBox = document.getElementById('yesterdayBox');
+    const checkboxes = Array.from(document.querySelectorAll('#todayCheckList input[type="checkbox"]'));
+    const logInputs = {
+      create: document.getElementById('logCreate'),
+      career: document.getElementById('logCareer'),
+      edit: document.getElementById('logEdit'),
+      stream: document.getElementById('logStream')
+    };
+    const todayTotal = document.getElementById('todayTotal');
+    const monthlyCalendar = document.getElementById('monthlyCalendar');
+    const calendarTitle = document.getElementById('calendarTitle');
+    const monthTotalHours = document.getElementById('monthTotalHours');
+    const monthCreateHours = document.getElementById('monthCreateHours');
+    const monthStreamCount = document.getElementById('monthStreamCount');
+    const monthBarCreate = document.getElementById('monthBarCreate');
+    const monthBarCareer = document.getElementById('monthBarCareer');
+    const monthBarEdit = document.getElementById('monthBarEdit');
+    const monthBarStream = document.getElementById('monthBarStream');
+    const monthBarCreateNum = document.getElementById('monthBarCreateNum');
+    const monthBarCareerNum = document.getElementById('monthBarCareerNum');
+    const monthBarEditNum = document.getElementById('monthBarEditNum');
+    const monthBarStreamNum = document.getElementById('monthBarStreamNum');
+    const prevMonthBtn = document.getElementById('prevMonthBtn');
+    const nextMonthBtn = document.getElementById('nextMonthBtn');
+
+    const now = new Date();
+    const jsDay = now.getDay();
+    const dayMap = ['日','月','火','水','木','金','土'];
+    const today = dayMap[jsDay];
+    const todayKey = formatDateKey(now);
+    let currentCalendarYear = now.getFullYear();
+    let currentCalendarMonth = now.getMonth();
+
+    todayBadge.textContent = `📅 今日：${today}曜日`;
+    todayFocus.textContent = getTodayFocus(today);
+    renderWeekPlan();
+    renderDayFlow();
+    rotateDailyDataIfNeeded();
+    loadTodayState();
+    bindStateEvents();
+
+    function renderWeekPlan(){
+      weekList.innerHTML = '';
+      weekPlan.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'weekItem' + (item.day === today ? ' today' : '');
+        el.innerHTML = `<div class="weekDay">${item.day}</div><div><div class="weekMain">${item.main}</div><div class="weekSub">${item.sub}</div></div>`;
+        weekList.appendChild(el);
+      });
+    }
+    function renderDayFlow(){
+      dayList.innerHTML = '';
+      dayFlow.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'dayItem';
+        el.innerHTML = `<div class="time">${item.time}</div><div class="task">${item.task}</div><div class="dayNote">${item.note}</div>`;
+        dayList.appendChild(el);
+      });
+    }
+    function formatDateKey(date){
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    function rotateDailyDataIfNeeded(){
+      const lastOpenedDate = localStorage.getItem('dashboard_last_opened_date');
+      if (!lastOpenedDate) {
+        localStorage.setItem('dashboard_last_opened_date', todayKey);
+        return;
+      }
+      if (lastOpenedDate === todayKey) return;
+      const previousState = {
+        date: lastOpenedDate,
+        checks: checkboxes.map((_, index) => localStorage.getItem(`dashboard_check_${index}`) === 'true'),
+        memo: localStorage.getItem('dashboard_memo') || '',
+        logs: {
+          create: localStorage.getItem('dashboard_log_create') || '',
+          career: localStorage.getItem('dashboard_log_career') || '',
+          edit: localStorage.getItem('dashboard_log_edit') || '',
+          stream: localStorage.getItem('dashboard_log_stream') || ''
+        }
+      };
+      localStorage.setItem(`dashboard_calendar_note_${lastOpenedDate}`, JSON.stringify(previousState));
+      checkboxes.forEach((_, index) => localStorage.removeItem(`dashboard_check_${index}`));
+      localStorage.removeItem('dashboard_memo');
+      localStorage.removeItem('dashboard_log_create');
+      localStorage.removeItem('dashboard_log_career');
+      localStorage.removeItem('dashboard_log_edit');
+      localStorage.removeItem('dashboard_log_stream');
+      localStorage.setItem('dashboard_last_opened_date', todayKey);
+    }
+    function loadTodayState(){
+      checkboxes.forEach((checkbox, index) => {
+        checkbox.checked = localStorage.getItem(`dashboard_check_${index}`) === 'true';
+      });
+      memoBox.value = localStorage.getItem('dashboard_memo') || '';
+      logInputs.create.value = localStorage.getItem('dashboard_log_create') || '';
+      logInputs.career.value = localStorage.getItem('dashboard_log_career') || '';
+      logInputs.edit.value = localStorage.getItem('dashboard_log_edit') || '';
+      logInputs.stream.value = localStorage.getItem('dashboard_log_stream') || '';
+      updateTodayTotal();
+      renderYesterday();
+      renderCalendar(currentCalendarYear, currentCalendarMonth);
+      renderMonthlyStats(currentCalendarYear, currentCalendarMonth);
+    }
+    function bindStateEvents(){
+      checkboxes.forEach((checkbox, index) => {
+        checkbox.addEventListener('change', () => {
+          localStorage.setItem(`dashboard_check_${index}`, checkbox.checked);
+        });
+      });
+      memoBox.addEventListener('input', () => {
+        localStorage.setItem('dashboard_memo', memoBox.value);
+      });
+      prevMonthBtn.addEventListener('click', () => {
+        currentCalendarMonth -= 1;
+        if (currentCalendarMonth < 0) { currentCalendarMonth = 11; currentCalendarYear -= 1; }
+        renderCalendar(currentCalendarYear, currentCalendarMonth);
+        renderMonthlyStats(currentCalendarYear, currentCalendarMonth);
+      });
+      nextMonthBtn.addEventListener('click', () => {
+        currentCalendarMonth += 1;
+        if (currentCalendarMonth > 11) { currentCalendarMonth = 0; currentCalendarYear += 1; }
+        renderCalendar(currentCalendarYear, currentCalendarMonth);
+        renderMonthlyStats(currentCalendarYear, currentCalendarMonth);
+      });
+      Object.entries(logInputs).forEach(([key, input]) => {
+        input.addEventListener('input', () => saveLog(key, input.value));
+      });
+    }
+    function saveLog(key, value){
+      localStorage.setItem(`dashboard_log_${key}`, value);
+      updateTodayTotal();
+    }
+    function updateTodayTotal(){
+      const total = ['create','career','edit','stream'].map(key => parseFloat(logInputs[key].value) || 0).reduce((sum, num) => sum + num, 0);
+      todayTotal.textContent = `${total}h`;
+    }
+    function renderYesterday(){
+      const previousDate = getPreviousDateKey(now);
+      const raw = localStorage.getItem(`dashboard_calendar_note_${previousDate}`);
+      if (!raw) {
+        yesterdayBox.innerHTML = '<div class="checkItem"><span>🗂️</span><span>まだ昨日の記録はありません。</span></div>';
+        return;
+      }
+      const data = JSON.parse(raw);
+      const checkCount = Array.isArray(data.checks) ? data.checks.filter(Boolean).length : 0;
+      const total = ['create','career','edit','stream'].map(key => parseFloat(data.logs?.[key]) || 0).reduce((sum, num) => sum + num, 0);
+      yesterdayBox.innerHTML = `<div class="checkItem"><span>📅</span><span>${data.date}</span></div><div class="checkItem"><span>✅</span><span>チェック達成数：${checkCount} / ${checkboxes.length}</span></div><div class="checkItem"><span>⏱️</span><span>作業合計：${total}h</span></div><div class="checkItem"><span>🛠️</span><span>制作 ${data.logs?.create || 0}h / 転職 ${data.logs?.career || 0}h / 編集 ${data.logs?.edit || 0}h / 配信 ${data.logs?.stream || 0}h</span></div><div class="checkItem"><span>📝</span><span>${escapeHtml(data.memo || 'メモなし')}</span></div>`;
+    }
+    function renderMonthlyStats(year, month){
+      let totalCreate = 0;
+      let totalCareer = 0;
+      let totalEdit = 0;
+      let totalStream = 0;
+      let streamCount = 0;
+
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      for (let day = 1; day <= daysInMonth; day++) {
+        const key = formatDateKey(new Date(year, month, day));
+        const raw = localStorage.getItem(`dashboard_calendar_note_${key}`);
+        if (!raw) continue;
+
+        try {
+          const detail = JSON.parse(raw);
+          const create = parseFloat(detail.logs?.create) || 0;
+          const career = parseFloat(detail.logs?.career) || 0;
+          const edit = parseFloat(detail.logs?.edit) || 0;
+          const stream = parseFloat(detail.logs?.stream) || 0;
+          totalCreate += create;
+          totalCareer += career;
+          totalEdit += edit;
+          totalStream += stream;
+          if (stream > 0) streamCount += 1;
+        } catch (e) {}
+      }
+
+      const totalAll = totalCreate + totalCareer + totalEdit + totalStream;
+      const maxVal = Math.max(totalCreate, totalCareer, totalEdit, totalStream, 1);
+
+      monthTotalHours.textContent = `${trimNumber(totalAll)}h`;
+      monthCreateHours.textContent = `${trimNumber(totalCreate)}h`;
+      monthStreamCount.textContent = `${streamCount}回`;
+
+      monthBarCreate.style.width = `${(totalCreate / maxVal) * 100}%`;
+      monthBarCareer.style.width = `${(totalCareer / maxVal) * 100}%`;
+      monthBarEdit.style.width = `${(totalEdit / maxVal) * 100}%`;
+      monthBarStream.style.width = `${(totalStream / maxVal) * 100}%`;
+
+      monthBarCreateNum.textContent = `${trimNumber(totalCreate)}h`;
+      monthBarCareerNum.textContent = `${trimNumber(totalCareer)}h`;
+      monthBarEditNum.textContent = `${trimNumber(totalEdit)}h`;
+      monthBarStreamNum.textContent = `${trimNumber(totalStream)}h`;
+    }
+
+    function renderCalendar(year, month){
+      calendarTitle.textContent = `${year}年${month + 1}月`;
+      const heads = ['日','月','火','水','木','金','土'].map(day => `<div class="calendarHead">${day}</div>`).join('');
+      const firstDay = new Date(year, month, 1);
+      const startDay = firstDay.getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const prevMonthDays = new Date(year, month, 0).getDate();
+      const totalCells = Math.ceil((startDay + daysInMonth) / 7) * 7;
+      let cells = '';
+      for (let i = 0; i < totalCells; i++) {
+        let cellDate; let isMuted = false;
+        if (i < startDay) { cellDate = new Date(year, month - 1, prevMonthDays - startDay + i + 1); isMuted = true; }
+        else if (i >= startDay + daysInMonth) { cellDate = new Date(year, month + 1, i - (startDay + daysInMonth) + 1); isMuted = true; }
+        else { cellDate = new Date(year, month, i - startDay + 1); }
+        const key = formatDateKey(cellDate);
+        const isToday = key === todayKey;
+        let detailSummary = '';
+        const detailRaw = localStorage.getItem(`dashboard_calendar_note_${key}`);
+        if (detailRaw) {
+          try {
+            const detail = JSON.parse(detailRaw);
+            const count = Array.isArray(detail.checks) ? detail.checks.filter(Boolean).length : 0;
+            const total = ['create','career','edit','stream'].map(name => parseFloat(detail.logs?.[name]) || 0).reduce((sum, num) => sum + num, 0);
+            detailSummary = `<details class="calendarMeta"><summary>記録を見る</summary><div>チェック：${count} / ${checkboxes.length}</div><div>合計：${total}h</div><div>制作 ${detail.logs?.create || 0}h / 転職 ${detail.logs?.career || 0}h / 編集 ${detail.logs?.edit || 0}h / 配信 ${detail.logs?.stream || 0}h</div><div>メモ：${escapeHtml(detail.memo || 'なし')}</div></details>`;
+          } catch (e) {}
+        }
+        cells += `<div class="calendarCell ${isMuted ? 'isMuted' : ''} ${isToday ? 'isToday' : ''}"><div class="calendarDate">${cellDate.getDate()}</div><textarea class="calendarText" data-date="${key}" placeholder="予定を書く"></textarea>${detailSummary}</div>`;
+      }
+      monthlyCalendar.innerHTML = `<div class="calendarWrap"><div class="calendarGrid">${heads}${cells}</div></div>`;
+      monthlyCalendar.querySelectorAll('.calendarText').forEach(textarea => {
+        textarea.value = localStorage.getItem(`dashboard_calendar_${textarea.dataset.date}`) || '';
+        textarea.addEventListener('input', () => {
+          localStorage.setItem(`dashboard_calendar_${textarea.dataset.date}`, textarea.value);
+        });
+      });
+    }
+    function getTodayFocus(day){
+      const map = {
+        '月': '今日は制作DAY。デッキ構築システムのコアを少しでも進める日。',
+        '火': '今日は配信DAY。昼は軽作業、夜は20時から無理なく配信。',
+        '水': '今日は転職活動DAY。求人確認や応募をまとめてやる日。',
+        '木': '今日は制作＋配信DAY。進捗は少しでもOK。夜は20時から配信。',
+        '金': '今日は動画編集DAY。切り抜きや投稿準備に向いている日。',
+        '土': '今日は制作か研究DAY。気分に合わせて選んで大丈夫。',
+        '日': '今日は休みDAY。休むことを予定に入れてOK。'
+      };
+      return map[day] || '今日は無理なく進める日。';
+    }
+    function getPreviousDateKey(date){ const prev = new Date(date); prev.setDate(prev.getDate() - 1); return formatDateKey(prev); }
+    function trimNumber(num){ return Number.isInteger(num) ? String(num) : String(num).replace(/\.0$/, ''); }
+    function escapeHtml(text){ return text.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;'); }
+  </script>
+</body>
+</html>
